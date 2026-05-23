@@ -1,0 +1,1 @@
+# Oprava-diakritiky-vice-admiral-jirik-cz-
