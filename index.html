@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>🖖 The Linguist V3.0: ATOMIC RECONSTRUCTION</title>
+    <style>
+        body { background: #050505; color: #ff0055; font-family: 'Segoe UI', monospace; padding: 20px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        h1 { border-bottom: 2px solid #ff0055; padding-bottom: 10px; margin: 0 0 20px 0; color: #fff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px #ff0055; }
+        
+        .container { display: flex; gap: 20px; flex: 1; min-height: 0; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        
+        label { font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; color: #ffcc00; }
+        label.out { color: #ff0055; }
+        
+        textarea { 
+            flex: 1; background: #111; color: #e0e0e0; border: 1px solid #333; padding: 15px; 
+            font-family: 'Consolas', monospace; font-size: 13px; resize: none; border-radius: 6px;
+            white-space: pre; overflow: auto; line-height: 1.5;
+        }
+        textarea:focus { outline: 2px solid #ff0055; border-color: transparent; }
+        
+        .controls { 
+            padding: 15px; background: #111; border: 1px solid #333; border-radius: 8px;
+            display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
+        }
+        
+        button { 
+            background: #222; border: 1px solid #444; color: #ccc; padding: 12px 24px; 
+            font-size: 14px; cursor: pointer; border-radius: 4px; font-weight: bold; 
+            transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        button:hover { transform: translateY(-2px); }
+        
+        .btn-atomic { 
+            border-color: #ff0055; color: #ff0055; 
+            box-shadow: 0 0 5px rgba(255, 0, 85, 0.2);
+        }
+        .btn-atomic:hover { 
+            background: #ff0055; color: #fff; 
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); 
+        }
+
+        .btn-copy { background: #004400; border-color: #00ff00; color: #00ff00; margin-left: auto; }
+        .btn-copy:hover { background: #00ff00; color: #000; }
+
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; color: #888; border-right: 1px solid #333; padding-right: 15px; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #ff0055; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>🖖 The Linguist V3.0: ATOMIC RECONSTRUCTOR (Emoji Fix)</h1>
+
+    <div class="controls">
+        <div class="checkbox-wrapper">
+            <input type="checkbox" id="safeMode" checked>
+            <label for="safeMode" style="margin:0; cursor:pointer; color:#fff;">🛡️ Safe Mode (Jen v uvozovkách)</label>
+        </div>
+
+        <button class="btn-atomic" onclick="atomicFix()">
+            ☢️ ATOMIC FIX (ðŸ”¥ &rarr; 🔥)
+        </button>
+        
+        <button onclick="copyOutput()" class="btn-copy">📋 Zkopírovat</button>
+    </div>
+
+    <div class="container">
+        <div class="col">
+            <label>VSTUP (Rozsypaný čaj)</label>
+            <textarea id="input" placeholder="Vložte např: ðŸ”¥ HLAVNÃ PÅ˜EPÃNAÄŒðŸâ³âŒðŸŽµ"></textarea>
+        </div>
+        <div class="col">
+            <label class="out">VÝSLEDEK (Rekonstrukce)</label>
+            <textarea id="output" readonly placeholder="Zde se objeví opravený text..."></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Tabulka pro zpětný převod Windows-1252 znaků na jejich bajtové hodnoty (0x80 - 0x9F)
+        // Ostatní znaky (ASCII a ISO-8859-1) se mapují 1:1 přes charCodeAt
+        const win1252Reverse = {
+            '€': 128, '‚': 130, 'ƒ': 131, '„': 132, '…': 133, '†': 134, '‡': 135,
+            'ˆ': 136, '‰': 137, 'Š': 138, '‹': 139, 'Œ': 140, 'Ž': 142,
+            '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151,
+            '˜': 152, '™': 153, 'š': 154, '›': 155, 'œ': 156, 'ž': 158, 'Ÿ': 159
+        };
+
+        function atomicFix() {
+            const input = document.getElementById('input').value;
+            const safeMode = document.getElementById('safeMode').checked;
+            
+            if (!input) return;
+
+            // Funkce pro binární rekonstrukci
+            const reconstructor = (text) => {
+                try {
+                    // 1. Převedeme string na pole bajtů
+                    // Předpokládáme, že vstup je interpretován jako Windows-1252 (nebo Latin1)
+                    const bytes = new Uint8Array(text.length);
+                    for (let i = 0; i < text.length; i++) {
+                        const char = text[i];
+                        const code = text.charCodeAt(i);
+                        
+                        // Pokud je to znak z Win-1252 rozsahu 0x80-0x9F, musíme ho vrátit na správný bajt
+                        if (win1252Reverse[char]) {
+                            bytes[i] = win1252Reverse[char];
+                        } else if (code <= 255) {
+                            // Standardní ASCII nebo ISO-8859-1
+                            bytes[i] = code;
+                        } else {
+                            // Pokud je tam znak > 255, znamená to, že už to NĚKDO opravoval nebo je to jiný bordel.
+                            // Pro jistotu to necháme jako '?', aby to neshodilo dekodér, nebo zkusíme zachovat low byte.
+                            // Ale pro "čínský čaj" to bývá vždy < 256.
+                            bytes[i] = code & 0xFF; 
+                        }
+                    }
+                    
+                    // 2. Dekódujeme pole bajtů jako UTF-8
+                    const decoder = new TextDecoder('utf-8');
+                    return decoder.decode(bytes);
+                } catch (e) {
+                    return text + " [CHYBA DEKÓDOVÁNÍ]";
+                }
+            };
+
+            let finalOutput = "";
+
+            if (safeMode) {
+                // Opravujeme pouze obsah stringů a komentářů
+                finalOutput = input.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\/\/.*$|\/\*[\s\S]*?\*\/)/gm, (match) => {
+                    // Pozor: Pokud opravujeme kód, musíme být opatrní. 
+                    // U Mojibake se často stane, že se rozbijí i uvozovky.
+                    // Ale regex výše předpokládá platné uvozovky.
+                    
+                    // Aplikujeme fix na vnitřek
+                    // Pokud je to string "..."
+                    if (match.startsWith('"') || match.startsWith("'") || match.startsWith('`')) {
+                        const quote = match[0];
+                        const content = match.slice(1, -1);
+                        return quote + reconstructor(content) + quote;
+                    }
+                    // Pokud je to komentář
+                    if (match.startsWith('//') || match.startsWith('/*')) {
+                        return reconstructor(match);
+                    }
+                    return match;
+                });
+            } else {
+                // Brutal mode
+                finalOutput = reconstructor(input);
+            }
+
+            document.getElementById('output').value = finalOutput;
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('output');
+            output.select();
+            document.execCommand('copy');
+            alert("📋 Zkopírováno!");
+        }
+    </script>
+
+</body>
+</html>
